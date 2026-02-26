@@ -11,6 +11,9 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
   app.post("/feishu/card-callback", async (req: Request, res: Response) => {
     const body = req.body as Record<string, unknown>;
 
+    // Log for debugging
+    console.log("Card callback received:", JSON.stringify(body).substring(0, 500));
+
     // Handle challenge verification
     if (body.type === "url_verification" && typeof body.challenge === "string") {
       res.json({ challenge: body.challenge });
@@ -24,14 +27,38 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
       const resolved = resolvePending(requestId, action);
 
       if (resolved) {
+        console.log(`Resolved request ${requestId} with action ${action}`);
+
         // Try to update the card to show result
         const context = body.context as Record<string, unknown> | undefined;
         const openMessageId = (body.open_message_id ?? context?.open_message_id) as string | undefined;
-        const command = (body.command ?? context?.command) as string | undefined;
 
-        if (openMessageId && command) {
+        if (openMessageId) {
           try {
-            await updateCardMessage(config, openMessageId, action, command);
+            // Build result card
+            const isApproved = action === "approve";
+            const resultCard = {
+              config: { wide_screen_mode: true },
+              header: {
+                title: { tag: "plain_text", content: isApproved ? "✅ 已批准" : "❌ 已拒绝" },
+                template: isApproved ? "green" : "red",
+              },
+              elements: [
+                {
+                  tag: "div",
+                  fields: [
+                    { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+                  ],
+                },
+              ],
+            };
+
+            // Return updated card
+            res.json({
+              toast: { type: isApproved ? "success" : "error", content: isApproved ? "已批准" : "已拒绝" },
+              card: resultCard,
+            });
+            return;
           } catch (error) {
             console.error("Failed to update card:", error);
           }
@@ -41,6 +68,7 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
       }
     }
 
-    res.status(200).send("ok");
+    // Default response
+    res.json({});
   });
 }

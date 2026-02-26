@@ -98,7 +98,7 @@ export async function sendApprovalCard(
     ],
   };
 
-  const response = await fetch("https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id", {
+  const response = await fetch("https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -190,7 +190,7 @@ export async function sendTimeoutNotification(
     ],
   };
 
-  await fetch("https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id", {
+  await fetch("https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -222,23 +222,39 @@ export function parseApprovalCommand(
 
 /**
  * Parse card button callback
+ * Supports both direct callback and event subscription format
  */
 export function parseCardCallback(
   body: Record<string, unknown>
 ): { action: "approve" | "deny"; requestId: string } | null {
   try {
-    const action = body.action as Record<string, unknown> | undefined;
-    if (!action) return null;
-
-    const value = action.value as Record<string, string> | undefined;
-    if (!value) return null;
-
-    if (value.action === "approve" || value.action === "deny") {
-      return {
-        action: value.action,
-        requestId: value.requestId,
-      };
+    // Event subscription format (schema 2.0)
+    const event = body.event as Record<string, unknown> | undefined;
+    if (event) {
+      const action = event.action as Record<string, unknown> | undefined;
+      if (action) {
+        const value = action.value as Record<string, string> | undefined;
+        if (value && (value.action === "approve" || value.action === "deny")) {
+          return {
+            action: value.action,
+            requestId: value.requestId,
+          };
+        }
+      }
     }
+
+    // Direct callback format
+    const action = body.action as Record<string, unknown> | undefined;
+    if (action) {
+      const value = action.value as Record<string, string> | undefined;
+      if (value && (value.action === "approve" || value.action === "deny")) {
+        return {
+          action: value.action,
+          requestId: value.requestId,
+        };
+      }
+    }
+
     return null;
   } catch {
     return null;
