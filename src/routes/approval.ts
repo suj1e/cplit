@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import type { Config } from "../config.js";
+import type { Config } from "../types.js";
 import {
   generateRequestId,
   storePending,
