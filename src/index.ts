@@ -2,6 +2,7 @@ import express from "express";
 import { loadConfig } from "./config.js";
 import { registerApprovalRoutes } from "./routes/approval.js";
 import { registerWebhookRoutes } from "./routes/webhook.js";
+import { registerCardCallbackRoutes } from "./routes/card-callback.js";
 
 const config = loadConfig();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 // Routes
 registerApprovalRoutes(app, config);
 registerWebhookRoutes(app, config);
+registerCardCallbackRoutes(app, config);
 
 // Health check
 app.get("/health", (_req, res) => {

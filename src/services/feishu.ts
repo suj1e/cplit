@@ -44,31 +44,17 @@ export async function getTenantToken(config: Config): Promise<string> {
 }
 
 /**
- * Send approval request card message
+ * Send approval request card with interactive buttons
  */
 export async function sendApprovalCard(
   config: Config,
   requestId: string,
   command: string,
   cwd: string
-): Promise<void> {
+): Promise<string | null> {
   const token = await getTenantToken(config);
 
-  const cardContent = {
-    type: "template",
-    data: {
-      template_id: "AAqkzJ8v", // Simple card template
-      template_variable: {
-        title: "🔐 Claude 命令审批请求",
-        command: command,
-        cwd: cwd,
-        request_id: requestId,
-      },
-    },
-  };
-
-  // Fallback to interactive card if template not available
-  const interactiveCard = {
+  const card = {
     config: { wide_screen_mode: true },
     header: {
       title: { tag: "plain_text", content: "🔐 Claude 命令审批请求" },
@@ -84,11 +70,28 @@ export async function sendApprovalCard(
         ],
       },
       {
+        tag: "action",
+        actions: [
+          {
+            tag: "button",
+            text: { tag: "plain_text", content: "✓ 批准" },
+            type: "primary",
+            value: { action: "approve", requestId },
+          },
+          {
+            tag: "button",
+            text: { tag: "plain_text", content: "✗ 拒绝" },
+            type: "danger",
+            value: { action: "deny", requestId },
+          },
+        ],
+      },
+      {
         tag: "note",
         elements: [
           {
             tag: "plain_text",
-            content: `💬 回复 approve ${requestId} 或 deny ${requestId}`,
+            content: `或回复 approve ${requestId} / deny ${requestId}`,
           },
         ],
       },
@@ -104,14 +107,60 @@ export async function sendApprovalCard(
     body: JSON.stringify({
       receive_id: config.feishu.approver_id,
       msg_type: "interactive",
-      content: JSON.stringify(interactiveCard),
+      content: JSON.stringify(card),
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
     console.error(`Failed to send approval card: ${error}`);
+    return null;
   }
+
+  const data = await response.json() as { data?: { message_id?: string } };
+  return data.data?.message_id ?? null;
+}
+
+/**
+ * Update card message to show result
+ */
+export async function updateCardMessage(
+  config: Config,
+  messageId: string,
+  action: "approve" | "deny",
+  command: string
+): Promise<void> {
+  const token = await getTenantToken(config);
+
+  const isApproved = action === "approve";
+  const card = {
+    config: { wide_screen_mode: true },
+    header: {
+      title: { tag: "plain_text", content: isApproved ? "✅ 已批准" : "❌ 已拒绝" },
+      template: isApproved ? "green" : "red",
+    },
+    elements: [
+      {
+        tag: "div",
+        fields: [
+          { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+          { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+        ],
+      },
+    ],
+  };
+
+  await fetch(`https://open.feishu.cn/open-apis/im/v1/messages/${messageId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      msg_type: "interactive",
+      content: JSON.stringify(card),
+    }),
+  });
 }
 
 /**
@@ -157,7 +206,6 @@ export async function sendTimeoutNotification(
 
 /**
  * Parse approval command from message text
- * Returns { action: 'approve' | 'deny', requestId: string } or null
  */
 export function parseApprovalCommand(
   text: string
@@ -170,4 +218,29 @@ export function parseApprovalCommand(
     };
   }
   return null;
+}
+
+/**
+ * Parse card button callback
+ */
+export function parseCardCallback(
+  body: Record<string, unknown>
+): { action: "approve" | "deny"; requestId: string } | null {
+  try {
+    const action = body.action as Record<string, unknown> | undefined;
+    if (!action) return null;
+
+    const value = action.value as Record<string, string> | undefined;
+    if (!value) return null;
+
+    if (value.action === "approve" || value.action === "deny") {
+      return {
+        action: value.action,
+        requestId: value.requestId,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

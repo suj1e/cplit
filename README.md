@@ -119,11 +119,25 @@ docker-compose up -d
 
 ### 3. 飞书配置
 
-在飞书开放平台配置事件订阅地址：
+在飞书开放平台配置：
 
+**事件订阅：**
 ```
 https://dmall.ink/feishu/webhook
 ```
+
+**卡片回调（可选，用于按钮交互）：**
+```
+https://dmall.ink/feishu/card-callback
+```
+
+**订阅事件：**
+- `im.message.receive_v1`
+
+**所需权限：**
+- `im:message`
+- `im:message:receive_as_bot`
+- `contact:user.base:readonly`
 
 ## Hook 示例
 
