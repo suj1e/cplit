@@ -22,7 +22,7 @@ pnpm lint:fix     # Auto-fix lint issues
 ```
 src/
 ├── index.ts           # Express server entry point
-├── config.ts          # Loads cplit.config.yaml, validates required fields
+├── config.ts          # Loads config from YAML + env vars (env takes priority)
 ├── types.ts           # TypeScript interfaces
 ├── routes/
 │   ├── approval.ts    # POST /request-approval - blocking endpoint for hooks
@@ -46,9 +46,29 @@ src/
 
 ## Configuration
 
-Required fields in `cplit.config.yaml`:
-- `feishu.app_id`
-- `feishu.app_secret`
-- `feishu.approver_id` (open_id of user receiving approval messages)
+Config loaded from `cplit.config.yaml` + environment variables. **Env vars take priority.**
 
-Optional: `server.port` (default 3000), `approval.timeout` (default 60000ms)
+**Required:**
+- `FEISHU_APP_ID` / `feishu.app_id`
+- `FEISHU_APP_SECRET` / `feishu.app_secret`
+- `FEISHU_APPROVER_ID` / `feishu.approver_id`
+
+**Optional:**
+- `SERVER_PORT` / `server.port` (default: 3000)
+- `APPROVAL_TIMEOUT` / `approval.timeout` (default: 60000ms)
+
+## Deployment
+
+Docker Compose with Nginx reverse proxy for HTTPS:
+
+```
+nginx/ssl/
+├── dmall.ink.pem   # SSL certificate
+└── dmall.ink.key   # SSL private key
+```
+
+```bash
+docker-compose up -d
+```
+
+Feishu webhook URL: `https://dmall.ink/feishu/webhook`
