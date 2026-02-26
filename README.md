@@ -7,13 +7,16 @@
 ```
 Claude CLI Hook → Cplit Service → 飞书 Bot → 用户手机
                                       ↑
-                              /feishu/webhook 回调
+                              /feishu/card-callback 回调
 ```
 
 1. Hook 拦截敏感命令，调用 `/request-approval`
-2. Cplit 通过飞书发送审批卡片
-3. 用户手机回复 `approve {id}` 或 `deny {id}`
-4. Cplit 返回决策给 Hook，决定是否执行
+2. Cplit 通过飞书发送审批卡片（带交互按钮）
+3. 用户点击 **批准** 或 **拒绝** 按钮
+4. 卡片实时更新显示处理结果，按钮消失
+5. Cplit 返回决策给 Hook，决定是否执行
+
+**备选方式：** 用户也可回复 `approve {id}` 或 `deny {id}` 文本消息
 
 ## 快速开始
 
@@ -126,7 +129,7 @@ docker-compose up -d
 https://dmall.ink/feishu/webhook
 ```
 
-**卡片回调（可选，用于按钮交互）：**
+**卡片回调（用于按钮交互）：**
 ```
 https://dmall.ink/feishu/card-callback
 ```
@@ -180,4 +183,11 @@ fi
 
 ### POST /feishu/webhook
 
-飞书回调端点，用于接收用户回复。
+飞书回调端点，用于接收用户文本回复（`approve/deny {id}`）。
+
+### POST /feishu/card-callback
+
+飞书卡片回调端点，用于接收按钮点击。用户点击后：
+- 卡片实时更新显示处理结果
+- 按钮消失，防止重复点击
+- 返回 toast 提示

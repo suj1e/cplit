@@ -127,17 +127,23 @@ export async function sendApprovalCard(
 export async function updateCardMessage(
   config: Config,
   messageId: string,
-  action: "approve" | "deny",
+  status: "approve" | "deny" | "timeout",
   command: string
 ): Promise<void> {
   const token = await getTenantToken(config);
 
-  const isApproved = action === "approve";
+  const statusConfig = {
+    approve: { title: "✅ 已批准", template: "green" },
+    deny: { title: "❌ 已拒绝", template: "red" },
+    timeout: { title: "⏰ 超时自动批准", template: "orange" },
+  };
+
+  const { title, template } = statusConfig[status];
   const card = {
     config: { wide_screen_mode: true },
     header: {
-      title: { tag: "plain_text", content: isApproved ? "✅ 已批准" : "❌ 已拒绝" },
-      template: isApproved ? "green" : "red",
+      title: { tag: "plain_text", content: title },
+      template,
     },
     elements: [
       {

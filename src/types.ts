@@ -32,6 +32,7 @@ export interface ApprovalResponse {
 // Pending request
 export interface PendingRequest {
   requestId: string;
+  messageId?: string;
   command: string;
   cwd: string;
   resolve: (decision: "approve" | "deny") => void;

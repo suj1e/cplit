@@ -26,23 +26,29 @@ src/
 ├── types.ts           # TypeScript interfaces
 ├── routes/
 │   ├── approval.ts    # POST /request-approval - blocking endpoint for hooks
-│   └── webhook.ts     # POST /feishu/webhook - receives Feishu callbacks
+│   ├── webhook.ts     # POST /feishu/webhook - receives Feishu text callbacks
+│   └── card-callback.ts # POST /feishu/card-callback - receives button clicks
 └── services/
     ├── pending.ts     # In-memory Map for pending requests, requestId generation
-    └── feishu.ts      # Feishu API: token caching, card messages, webhook parsing
+    └── feishu.ts      # Feishu API: token caching, card messages, card updates
 ```
 
 **Data Flow:**
 1. `/request-approval` creates a PendingRequest with a 4-digit requestId
-2. Request stored in pendingMap, Feishu card sent
-3. Endpoint blocks until webhook resolves or timeout (60s → auto-allow)
-4. `/feishu/webhook` parses "approve/deny {id}" and resolves pending promise
+2. Request stored in pendingMap (includes messageId), Feishu card sent
+3. Endpoint blocks until callback resolves or timeout (60s → auto-allow)
+4. `/feishu/card-callback` handles button clicks:
+   - Gets pending request to access messageId
+   - Updates card via PATCH API + response body
+   - Resolves pending promise
+5. Timeout triggers auto-approve with card update to "超时自动批准"
 
 **Key Design Decisions:**
 - In-memory storage (no persistence, restarts lose pending requests)
 - 4-digit requestId for easy mobile input
 - Timeout defaults to auto-allow (not deny) to avoid blocking workflows
 - Feishu tenant_access_token cached with 5min refresh buffer
+- Card updates use both PATCH API (persistence) + response body (immediate UI update)
 
 ## Configuration
 
@@ -83,3 +89,4 @@ docker-compose restart nginx
 ```
 
 Feishu webhook URL: `https://dmall.ink/feishu/webhook`
+Feishu card callback URL: `https://dmall.ink/feishu/card-callback`

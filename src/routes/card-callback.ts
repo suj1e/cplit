@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import type { Config } from "../types.js";
-import { resolvePending } from "../services/pending.js";
-import { parseCardCallback } from "../services/feishu.js";
+import { getPending, resolvePending } from "../services/pending.js";
+import { parseCardCallback, updateCardMessage } from "../services/feishu.js";
 
 export function registerCardCallbackRoutes(app: Express, config: Config): void {
   /**
@@ -21,33 +21,54 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
     const parsed = parseCardCallback(body);
     if (parsed) {
       const { action, requestId } = parsed;
-      const resolved = resolvePending(requestId, action);
 
-      if (resolved) {
-        console.log(`Resolved request ${requestId} with action ${action}`);
-      } else {
-        console.log(`No pending request found for ID: ${requestId}`);
+      // Get pending request first to access messageId
+      const pending = getPending(requestId);
+
+      // Update card via PATCH API
+      if (pending?.messageId) {
+        try {
+          await updateCardMessage(config, pending.messageId, action, pending.command);
+        } catch (error) {
+          console.error(`[card-callback] Failed to update card:`, error);
+        }
       }
 
-      // Return updated card to replace buttons with status
+      // Resolve pending request
+      const resolved = resolvePending(requestId, action);
+      if (!resolved) {
+        // Already resolved by another callback, just return success
+        res.json({});
+        return;
+      }
+
+      // Return updated card in response
       const isApproved = action === "approve";
-      const resultCard = {
-        config: { wide_screen_mode: true },
-        header: {
-          title: { tag: "plain_text", content: isApproved ? "✅ 已批准" : "❌ 已拒绝" },
-          template: isApproved ? "green" : "red",
+      res.json({
+        toast: {
+          type: "success",
+          content: isApproved ? "✅ 已批准" : "❌ 已拒绝",
         },
-        elements: [
-          {
-            tag: "div",
-            fields: [
-              { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+        card: {
+          type: "raw",
+          data: {
+            config: { wide_screen_mode: true },
+            header: {
+              title: { tag: "plain_text", content: isApproved ? "✅ 已批准" : "❌ 已拒绝" },
+              template: isApproved ? "green" : "red",
+            },
+            elements: [
+              {
+                tag: "div",
+                fields: [
+                  { tag: "lark_md", content: `**命令:** ${pending?.command || "未知"}` },
+                  { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+                ],
+              },
             ],
           },
-        ],
-      };
-
-      res.json({ card: resultCard });
+        },
+      });
       return;
     }
 

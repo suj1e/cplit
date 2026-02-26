@@ -7,7 +7,7 @@ import {
 } from "../services/pending.js";
 import {
   sendApprovalCard,
-  sendTimeoutNotification,
+  updateCardMessage,
 } from "../services/feishu.js";
 
 export function registerApprovalRoutes(app: Express, config: Config): void {
@@ -25,31 +25,41 @@ export function registerApprovalRoutes(app: Express, config: Config): void {
 
     const requestId = generateRequestId();
 
+    // Send approval card first to get messageId
+    let messageId: string | undefined;
+    try {
+      const id = await sendApprovalCard(config, requestId, command, cwd || process.cwd());
+      messageId = id ?? undefined;
+    } catch (error) {
+      console.error("Failed to send approval card:", error);
+      // Still proceed - timeout will handle it
+    }
+
     // Create promise that will be resolved by webhook or timeout
     const decisionPromise = new Promise<"approve" | "deny">((resolve) => {
       // Set up timeout - auto-allow after timeout
       const timeoutId = setTimeout(async () => {
         resolve("approve");
-        await sendTimeoutNotification(config, command);
+        // Update card to show timeout status
+        if (messageId) {
+          try {
+            await updateCardMessage(config, messageId, "timeout", command);
+          } catch (error) {
+            console.error("Failed to update card on timeout:", error);
+          }
+        }
       }, config.approval.timeout);
 
-      // Store pending request
+      // Store pending request with messageId
       storePending({
         requestId,
+        messageId,
         command,
         cwd: cwd || process.cwd(),
         resolve,
         timeoutId,
       });
     });
-
-    // Send approval request to Feishu
-    try {
-      await sendApprovalCard(config, requestId, command, cwd || process.cwd());
-    } catch (error) {
-      console.error("Failed to send approval card:", error);
-      // Still proceed - timeout will handle it
-    }
 
     // Wait for decision (blocking)
     const decision = await decisionPromise;
