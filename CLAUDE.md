@@ -59,16 +59,27 @@ Config loaded from `cplit.config.yaml` + environment variables. **Env vars take 
 
 ## Deployment
 
-Docker Compose with Nginx reverse proxy for HTTPS:
-
-```
-nginx/ssl/
-├── dmall.ink.pem   # SSL certificate
-└── dmall.ink.key   # SSL private key
-```
+Docker Compose with Nginx reverse proxy + Let's Encrypt SSL:
 
 ```bash
+# 1. Get SSL certificate
+docker run -it --rm \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  -p 80:80 \
+  certbot/certbot certonly --standalone \
+  -d dmall.ink \
+  --email your-email@example.com \
+  --agree-tos
+
+# 2. Build and start
+pnpm build
 docker-compose up -d
+```
+
+Certificate renewal (90 days validity):
+```bash
+docker run --rm -v /etc/letsencrypt:/etc/letsencrypt certbot/certbot renew
+docker-compose restart nginx
 ```
 
 Feishu webhook URL: `https://dmall.ink/feishu/webhook`
