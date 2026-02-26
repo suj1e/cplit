@@ -1,0 +1,10 @@
+services:
+  cplit:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./cplit.config.yaml:/app/cplit.config.yaml:ro
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

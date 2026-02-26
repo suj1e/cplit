@@ -1,0 +1,10 @@
+server:
+  port: 3000
+
+feishu:
+  app_id: "cli_xxx"
+  app_secret: "xxx"
+  approver_id: "ou_xxx"  # 接收审批消息的用户 open_id
+
+approval:
+  timeout: 60000  # 超时时间（毫秒），默认 60s
