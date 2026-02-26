@@ -1,0 +1,14 @@
+# Cplit Configuration Example
+# Copy this file to cplit.config.yaml and fill in your values
+# Or use environment variables (higher priority)
+
+server:
+  port: 3000
+
+feishu:
+  app_id: ""        # or set FEISHU_APP_ID
+  app_secret: ""    # or set FEISHU_APP_SECRET
+  approver_id: ""   # or set FEISHU_APPROVER_ID
+
+approval:
+  timeout: 60000    # milliseconds, or set APPROVAL_TIMEOUT

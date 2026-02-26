@@ -1,8 +1,8 @@
-## Requirements
+## MODIFIED Requirements
 
-### Requirement: 加载配置
+### Requirement: 加载 YAML 配置文件
 
-系统 SHALL 从项目目录加载 `cplit.config.yaml` 配置文件（如果存在），并支持环境变量覆盖。
+系统 SHALL 从项目目录加载 `cplit.config.yaml` 配置文件，并支持环境变量覆盖。
 
 #### Scenario: 成功加载配置
 - **WHEN** 服务启动
@@ -19,26 +19,21 @@
 - **AND** `cplit.config.yaml` 中也配置了 `feishu.app_secret`
 - **THEN** 系统 SHALL 使用环境变量的值
 
-### Requirement: 配置结构
+### Requirement: 配置验证
 
-系统 SHALL 支持以下配置结构：
+系统 SHALL 验证必要配置项存在（来自配置文件或环境变量）。
 
-#### Scenario: 完整配置
-- **WHEN** 配置文件包含以下字段
-- **THEN** 系统 SHALL 正确解析：
+#### Scenario: 缺少必要配置
+- **WHEN** 配置文件和环境变量都缺少 `feishu.app_id`、`feishu.app_secret` 或 `feishu.approver_id`
+- **THEN** 系统 SHALL 抛出错误并拒绝启动
 
-```yaml
-server:
-  port: 3000
+#### Scenario: 使用默认值
+- **WHEN** `server.port` 和 `SERVER_PORT` 都未配置
+- **THEN** 系统 SHALL 使用默认值 3000
+- **WHEN** `approval.timeout` 和 `APPROVAL_TIMEOUT` 都未配置
+- **THEN** 系统 SHALL 使用默认值 60000
 
-feishu:
-  app_id: "cli_xxx"
-  app_secret: "xxx"
-  approver_id: "ou_xxx"
-
-approval:
-  timeout: 60000  # 毫秒
-```
+## ADDED Requirements
 
 ### Requirement: 环境变量支持
 
@@ -56,17 +51,3 @@ approval:
 #### Scenario: 环境变量优先级
 - **WHEN** 同一字段同时存在于配置文件和环境变量
 - **THEN** 系统 SHALL 优先使用环境变量的值
-
-### Requirement: 配置验证
-
-系统 SHALL 验证必要配置项存在（来自配置文件或环境变量）。
-
-#### Scenario: 缺少必要配置
-- **WHEN** 配置文件和环境变量都缺少 `feishu.app_id`、`feishu.app_secret` 或 `feishu.approver_id`
-- **THEN** 系统 SHALL 抛出错误并拒绝启动
-
-#### Scenario: 使用默认值
-- **WHEN** `server.port` 和 `SERVER_PORT` 都未配置
-- **THEN** 系统 SHALL 使用默认值 3000
-- **WHEN** `approval.timeout` 和 `APPROVAL_TIMEOUT` 都未配置
-- **THEN** 系统 SHALL 使用默认值 60000

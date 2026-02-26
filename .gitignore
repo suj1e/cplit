@@ -23,5 +23,8 @@ npm-debug.log*
 .env.local
 .env.*.local
 
+# Config (may contain secrets)
+cplit.config.yaml
+
 # pnpm
 .pnpm-store/

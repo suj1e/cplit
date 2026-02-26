@@ -36,7 +36,15 @@ pnpm lint
 
 ## 配置
 
-创建 `cplit.config.yaml`：
+支持两种配置方式：配置文件或环境变量。环境变量优先级更高。
+
+### 方式一：配置文件
+
+```bash
+cp cplit.config.example.yaml cplit.config.yaml
+```
+
+编辑 `cplit.config.yaml`：
 
 ```yaml
 server:
@@ -49,6 +57,25 @@ feishu:
 
 approval:
   timeout: 60000  # 超时时间（毫秒），默认 60s
+```
+
+### 方式二：环境变量
+
+| 环境变量 | 对应配置 |
+|---------|---------|
+| `SERVER_PORT` | `server.port` |
+| `FEISHU_APP_ID` | `feishu.app_id` |
+| `FEISHU_APP_SECRET` | `feishu.app_secret` |
+| `FEISHU_APPROVER_ID` | `feishu.approver_id` |
+| `APPROVAL_TIMEOUT` | `approval.timeout` |
+
+示例：
+
+```bash
+export FEISHU_APP_ID="cli_xxx"
+export FEISHU_APP_SECRET="xxx"
+export FEISHU_APPROVER_ID="ou_xxx"
+pnpm start
 ```
 
 ## Docker 部署
