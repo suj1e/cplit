@@ -80,24 +80,39 @@ pnpm start
 
 ## Docker 部署
 
-### 1. 配置 SSL 证书
+### 1. 获取 SSL 证书（Let's Encrypt）
 
-将证书文件放入 `nginx/ssl/` 目录：
+```bash
+# 停止占用 80 端口的服务
+docker-compose down
 
+# 获取证书
+docker run -it --rm \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  -p 80:80 \
+  certbot/certbot certonly --standalone \
+  -d dmall.ink \
+  --email your-email@example.com \
+  --agree-tos \
+  --no-eff-email
 ```
-nginx/ssl/
-├── dmall.ink.pem   # 证书文件
-└── dmall.ink.key   # 私钥文件
+
+证书续期（90 天过期）：
+
+```bash
+# 手动续期
+docker run -it --rm \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  certbot/certbot renew
+
+# 或设置 cron 自动续期
+# 0 0 1 * * docker run --rm -v /etc/letsencrypt:/etc/letsencrypt certbot/certbot renew && cd /path/to/cplit && docker-compose restart nginx
 ```
 
 ### 2. 启动服务
 
 ```bash
-# 构建并启动
 docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
 ```
 
 服务将通过 HTTPS 在 `https://dmall.ink` 提供访问。
