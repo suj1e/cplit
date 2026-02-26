@@ -1,10 +1,22 @@
 services:
   cplit:
     build: .
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - ./cplit.config.yaml:/app/cplit.config.yaml:ro
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - cplit
+    restart: unless-stopped

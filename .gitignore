@@ -26,5 +26,8 @@ npm-debug.log*
 # Config (may contain secrets)
 cplit.config.yaml
 
+# SSL certificates
+nginx/ssl/
+
 # pnpm
 .pnpm-store/

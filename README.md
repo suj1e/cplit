@@ -80,8 +80,34 @@ pnpm start
 
 ## Docker 部署
 
+### 1. 配置 SSL 证书
+
+将证书文件放入 `nginx/ssl/` 目录：
+
+```
+nginx/ssl/
+├── dmall.ink.pem   # 证书文件
+└── dmall.ink.key   # 私钥文件
+```
+
+### 2. 启动服务
+
 ```bash
+# 构建并启动
 docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+```
+
+服务将通过 HTTPS 在 `https://dmall.ink` 提供访问。
+
+### 3. 飞书配置
+
+在飞书开放平台配置事件订阅地址：
+
+```
+https://dmall.ink/feishu/webhook
 ```
 
 ## Hook 示例
