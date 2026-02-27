@@ -83,55 +83,33 @@ pnpm start
 
 ## Docker 部署
 
-### 1. 获取 SSL 证书（Let's Encrypt）
+cplit 通过 npass 网关部署，网关负责 SSL 终止和路由。
 
-```bash
-# 停止占用 80 端口的服务
-docker-compose down
+### 前置条件
 
-# 获取证书
-docker run -it --rm \
-  -v /etc/letsencrypt:/etc/letsencrypt \
-  -p 80:80 \
-  certbot/certbot certonly --standalone \
-  -d dmall.ink \
-  --email your-email@example.com \
-  --agree-tos \
-  --no-eff-email
-```
+- npass 网关已运行
+- Docker 网络 `npass` 已创建
 
-证书续期（90 天过期）：
-
-```bash
-# 手动续期
-docker run -it --rm \
-  -v /etc/letsencrypt:/etc/letsencrypt \
-  certbot/certbot renew
-
-# 或设置 cron 自动续期
-# 0 0 1 * * docker run --rm -v /etc/letsencrypt:/etc/letsencrypt certbot/certbot renew && cd /path/to/cplit && docker-compose restart nginx
-```
-
-### 2. 启动服务
+### 启动服务
 
 ```bash
 docker-compose up -d
 ```
 
-服务将通过 HTTPS 在 `https://dmall.ink` 提供访问。
+服务将通过网关在 `https://cplit.dmall.ink` 提供访问。
 
-### 3. 飞书配置
+### 飞书配置
 
 在飞书开放平台配置：
 
 **事件订阅：**
 ```
-https://dmall.ink/feishu/webhook
+https://cplit.dmall.ink/feishu/webhook
 ```
 
 **卡片回调（用于按钮交互）：**
 ```
-https://dmall.ink/feishu/card-callback
+https://cplit.dmall.ink/feishu/card-callback
 ```
 
 **订阅事件：**

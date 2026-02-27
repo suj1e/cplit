@@ -65,28 +65,18 @@ Config loaded from `cplit.config.yaml` + environment variables. **Env vars take 
 
 ## Deployment
 
-Docker Compose with Nginx reverse proxy + Let's Encrypt SSL:
+cplit is deployed behind the npass gateway. The gateway handles SSL termination and routes `cplit.dmall.ink` to this service.
 
 ```bash
-# 1. Get SSL certificate
-docker run -it --rm \
-  -v /etc/letsencrypt:/etc/letsencrypt \
-  -p 80:80 \
-  certbot/certbot certonly --standalone \
-  -d dmall.ink \
-  --email your-email@example.com \
-  --agree-tos
-
-# 2. Build and start
+# Build and start (joins npass network)
 pnpm build
 docker-compose up -d
 ```
 
-Certificate renewal (90 days validity):
-```bash
-docker run --rm -v /etc/letsencrypt:/etc/letsencrypt certbot/certbot renew
-docker-compose restart nginx
-```
+**Prerequisites:**
+- npass gateway must be running
+- Docker network `npass` must exist
+- SSL certificate managed by npass
 
-Feishu webhook URL: `https://dmall.ink/feishu/webhook`
-Feishu card callback URL: `https://dmall.ink/feishu/card-callback`
+Feishu webhook URL: `https://cplit.dmall.ink/feishu/webhook`
+Feishu card callback URL: `https://cplit.dmall.ink/feishu/card-callback`
