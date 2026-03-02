@@ -64,9 +64,18 @@ export async function sendApprovalCard(
       {
         tag: "div",
         fields: [
-          { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
-          { tag: "lark_md", content: `**目录:**\n\`${cwd}\`` },
-          { tag: "lark_md", content: `**请求ID:** ${requestId}` },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+          },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**目录:**\n\`${cwd}\`` },
+          },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**请求ID:** ${requestId}` },
+          },
         ],
       },
       {
@@ -149,8 +158,14 @@ export async function updateCardMessage(
       {
         tag: "div",
         fields: [
-          { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
-          { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+          },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+          },
         ],
       },
     ],
@@ -187,7 +202,12 @@ export async function sendTimeoutNotification(
     elements: [
       {
         tag: "div",
-        fields: [{ tag: "lark_md", content: `**命令:**\n\`${command}\`` }],
+        fields: [
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+          },
+        ],
       },
       {
         tag: "note",
