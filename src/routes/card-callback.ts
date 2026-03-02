@@ -28,7 +28,7 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
       // Update card via PATCH API
       if (pending?.messageId) {
         try {
-          await updateCardMessage(config, pending.messageId, action, pending.command);
+          await updateCardMessage(config, pending.messageId, action, pending.command, pending.cwd);
         } catch (error) {
           console.error(`[card-callback] Failed to update card:`, error);
         }
@@ -60,9 +60,13 @@ export function registerCardCallbackRoutes(app: Express, config: Config): void {
             elements: [
               {
                 tag: "div",
+                text: { tag: "lark_md", content: `**⌨️ 命令**\n\`${pending?.command || "未知"}\`` },
+              },
+              {
+                tag: "div",
                 fields: [
-                  { tag: "lark_md", content: `**命令:** ${pending?.command || "未知"}` },
-                  { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+                  { is_short: true, text: { tag: "lark_md", content: `**📁 目录**\n\`${pending?.cwd || "未知"}\`` } },
+                  { is_short: true, text: { tag: "lark_md", content: `**🕐 处理时间**\n${new Date().toLocaleString("zh-CN")}` } },
                 ],
               },
             ],

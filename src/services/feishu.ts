@@ -63,18 +63,18 @@ export async function sendApprovalCard(
     elements: [
       {
         tag: "div",
+        text: { tag: "lark_md", content: `**⌨️ 命令**\n\`${command}\`` },
+      },
+      {
+        tag: "div",
         fields: [
           {
             is_short: true,
-            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+            text: { tag: "lark_md", content: `**📁 目录**\n\`${cwd}\`` },
           },
           {
             is_short: true,
-            text: { tag: "lark_md", content: `**目录:**\n\`${cwd}\`` },
-          },
-          {
-            is_short: true,
-            text: { tag: "lark_md", content: `**请求ID:** ${requestId}` },
+            text: { tag: "lark_md", content: `**🔗 请求ID**\n${requestId}` },
           },
         ],
       },
@@ -137,7 +137,8 @@ export async function updateCardMessage(
   config: Config,
   messageId: string,
   status: "approve" | "deny" | "timeout",
-  command: string
+  command: string,
+  cwd: string
 ): Promise<void> {
   const token = await getTenantToken(config);
 
@@ -157,14 +158,18 @@ export async function updateCardMessage(
     elements: [
       {
         tag: "div",
+        text: { tag: "lark_md", content: `**⌨️ 命令**\n\`${command}\`` },
+      },
+      {
+        tag: "div",
         fields: [
           {
             is_short: true,
-            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+            text: { tag: "lark_md", content: `**📁 目录**\n\`${cwd}\`` },
           },
           {
             is_short: true,
-            text: { tag: "lark_md", content: `**处理时间:** ${new Date().toLocaleString("zh-CN")}` },
+            text: { tag: "lark_md", content: `**🕐 处理时间**\n${new Date().toLocaleString("zh-CN")}` },
           },
         ],
       },
@@ -189,7 +194,8 @@ export async function updateCardMessage(
  */
 export async function sendTimeoutNotification(
   config: Config,
-  command: string
+  command: string,
+  cwd: string
 ): Promise<void> {
   const token = await getTenantToken(config);
 
@@ -202,10 +208,18 @@ export async function sendTimeoutNotification(
     elements: [
       {
         tag: "div",
+        text: { tag: "lark_md", content: `**⌨️ 命令**\n\`${command}\`` },
+      },
+      {
+        tag: "div",
         fields: [
           {
             is_short: true,
-            text: { tag: "lark_md", content: `**命令:**\n\`${command}\`` },
+            text: { tag: "lark_md", content: `**📁 目录**\n\`${cwd}\`` },
+          },
+          {
+            is_short: true,
+            text: { tag: "lark_md", content: `**🕐 处理时间**\n${new Date().toLocaleString("zh-CN")}` },
           },
         ],
       },

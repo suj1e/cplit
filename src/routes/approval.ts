@@ -18,18 +18,22 @@ export function registerApprovalRoutes(app: Express, config: Config): void {
   app.post("/request-approval", async (req: Request, res: Response) => {
     const { command, cwd } = req.body;
 
+    console.log(`[Approval] Request received: ${command} (cwd: ${cwd})`);
+
     if (!command) {
       res.status(400).json({ error: "Missing command" });
       return;
     }
 
     const requestId = generateRequestId();
+    console.log(`[Approval] Request ID: ${requestId}`);
 
     // Send approval card first to get messageId
     let messageId: string | undefined;
     try {
       const id = await sendApprovalCard(config, requestId, command, cwd || process.cwd());
       messageId = id ?? undefined;
+      console.log(`[Approval] Card sent, messageId: ${messageId}`);
     } catch (error) {
       console.error("Failed to send approval card:", error);
       // Still proceed - timeout will handle it
@@ -43,7 +47,7 @@ export function registerApprovalRoutes(app: Express, config: Config): void {
         // Update card to show timeout status
         if (messageId) {
           try {
-            await updateCardMessage(config, messageId, "timeout", command);
+            await updateCardMessage(config, messageId, "timeout", command, cwd || process.cwd());
           } catch (error) {
             console.error("Failed to update card on timeout:", error);
           }
